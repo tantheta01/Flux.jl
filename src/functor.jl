@@ -38,6 +38,7 @@ Possible values include:
 """
 trainmode!(m, mode = true) = mode isa Bool ? testmode!(m, !mode) : testmode!(m, mode)
 
+# push!(::Params, x) automatically discards already seen arrays
 params!(p::Params, x::AbstractArray{<:Number}, seen = IdSet()) = push!(p, x)
 
 function params!(p::Params, x, seen = IdSet())

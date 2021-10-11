@@ -630,9 +630,11 @@ end
 
 function _restructure(m, xs)
   i = 0
-  m̄ = fmap(m) do x
-    x isa AbstractArray || return x
-    x = reshape(xs[i.+(1:length(x))], size(x))
+  filter = (x, c) -> any(y -> c === y, trainable(x))
+  walk = filtered_walk(filter)
+  m̄ = fmap(m; walk) do x
+    x isa AbstractArray{<:Number} || return x
+    x = reshape(xs[i .+ (1:length(x))], size(x))
     i += length(x)
     return x
   end
@@ -673,12 +675,27 @@ modifications to the weight vector (for example, with a hypernetwork).
 """
 function destructure(m)
   xs = Zygote.Buffer([])
-  fmap(m) do x
-    x isa AbstractArray && push!(xs, x)
+  filter = (x, c) -> any(y -> c === y, trainable(x))
+  walk = filtered_walk(filter)
+  fmap(m; walk) do x
+    x isa AbstractArray{<:Number} && push!(xs, x)
     return x
   end
   return vcat(vec.(copy(xs))...), p -> _restructure(m, p)
 end
+
+function filtered_walk(filter)
+  function walk(f, x)
+    children, reconstruct = functor(x)
+    mappedchildren = map(children) do c
+      filter(x, c) ? f(c) : c
+    end
+    reconstruct(mappedchildren)
+  end
+  return walk
+end
+
+@functor Base.RefValue
 
 # Other
 
