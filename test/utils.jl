@@ -409,22 +409,23 @@ end
       ∇p = gradient(θ -> sum(re(θ)(x)), p)[1]
       # @show size(∇p)
       # @show size(destructure(∇m)[1])
-      # @show norm(∇p - destructure(∇m)[1])
+      @show norm(∇p - destructure(∇m)[1])
       @test ∇p ≈ destructure(∇m)[1] atol=1e-4
     end
 
     @testset "destructure with buffers" begin
-      p, re = destructure(BatchNorm(10))
-      @test length(p) == 20
+      p, re = destructure(BatchNorm(3))
+      @test length(p) == 6
 
       # https://github.com/FluxML/Flux.jl/issues/1727
-      x = rand(Float32, 2, 3)
-      gs, back = Flux.pullback(x, p) do x, p
+      x = rand(Float32, 3, 4)
+      y, back = Flux.pullback(x, p) do x, p
           vec(re(p)(x))
       end
-      @test_nowarn b = back(a)
-      @test b[1] == size(x)
-      @test b[2] == size(p)
+      @test_nowarn back(y)
+      b = back(y)
+      @test size(b[1]) == size(x)
+      @test size(b[2]) == size(p)
     end
   end
 end
