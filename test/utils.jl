@@ -216,6 +216,62 @@ end
   r = Any[nothing,m]
   r[1] = r
   @test size.(params(r)) == [(5, 10), (5, 5), (5,), (5, 1)]
+
+  @testset "use params in gradient context" begin
+    m = Chain(Dense(3,2), Dense(2,2))
+    ps = Flux.params(m)
+    gs = gradient(() -> sum(sum(p) for p in Flux.params(m)), ps)
+    for p in ps
+      @test gs[p] ≈ ones(size(p))
+    end    
+
+    w1, w2 =  rand(2), rand(2)
+    ps = Flux.params(w1, w2)
+    gs = gradient(() -> sum(sum(p) for p in Flux.params(w1, w2)), ps)
+    for p in ps
+      @test gs[p] ≈ ones(size(p))
+    end
+
+    # BROKEN TESTS
+    m = Chain(Dense(3,2), Dense(2,2))
+    @test_broken gradient(m -> sum(params(m)[1]), m) != (nothing, )
+    @test_broken gradient(m -> sum(params(m)[1]), m) != (nothing, )
+
+    gs = gradient(() -> sum(params(m)[1]), params(m))
+    @test_broken gs[params(m)[1]] !== nothing
+
+    # Tests from https://github.com/FluxML/Flux.jl/pull/1614
+    m = Dense(3, 2)
+    ps = Flux.params(m)
+    data = rand(Float32, 3, 5)
+    loss(m, x) = sum(m(x).^2)
+
+    g1 = gradient(Flux.params(m)) do
+      loss(m, data)
+    end
+    g2 = gradient(Flux.params(m)) do
+      ps = Flux.params(m) # just creating params without using them
+      loss(m, data)
+    end
+    g3 = gradient(Flux.params(m)) do
+      ps = Flux.params(m)
+      loss(m, data) + sum(sum(p) for p in ps)
+    end 
+    g4 = gradient(Flux.params(m)) do
+      loss(m, data) + sum(sum(p) for p in ps)
+    end
+    g5 = gradient(Flux.params(m)) do
+      sum(Flux.params(m)[1]) + sum(Flux.params(m)[2])
+    end
+    g6 = gradient(Flux.params(m)) do
+      sum(ps[1]) + sum(ps[2])
+    end
+    @test g2[m.weight] == g1[m.weight]
+    @test g3[m.weight] == g1[m.weight] .+ 1
+    @test g4[m.weight] == g1[m.weight] .+ 1
+    @test_broken g5[m.weight] .== 1 # TODO regression with respect to master
+    @test_broken g6[m.weight] .== 1 # Not a regression, broken on master
+  end
 end
 
 @testset "Basic Stacking" begin

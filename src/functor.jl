@@ -37,31 +37,6 @@ Possible values include:
 """
 trainmode!(m, mode = true) = mode isa Bool ? testmode!(m, !mode) : testmode!(m, mode)
 
-# # push!(::Params, x) automatically discards already seen arrays
-# params!(p::Params, x::AbstractArray{<:Number}, seen = IdSet()) = push!(p, x)
-
-# function params!(p::Params, x, seen = IdSet())
-#   x in seen && return
-#   push!(seen, x)
-#   for child in trainable(x)
-#     params!(p, child, seen)
-#   end
-# end
-
-# function params(m...)
-#   ps = Params()
-#   params!(ps, m)
-#   return ps
-# end
-
-function params(m...)
-  ps = Params()
-  collect_params!(ps, m)
-  return ps
-end
-
-
-
 function loadparams!(m, xs)
   for (p, x) in zip(params(m), xs)
     size(p) == size(x) ||

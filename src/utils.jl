@@ -705,7 +705,49 @@ function filtered_walk(filter)
   return walk
 end
 
+"""
+  params(m...)
+
+Collect trainable parameters (a.k.a. numerical arrays)
+from the input model(s) `m` into a [`Zygote.Params`](@ref) object. 
+
+Only the parameters that can be reached by recursion 
+on the [`trainable`](@ref) children of
+the tree with root `m` are collected.
+
+# Usage
+
+```julia 
+julia> m = Dense(ones(2, 3), zeros(2))
+Dense(3, 2)         # 8 parameters
+
+julia> ps = Flux.params(m)
+Params([[1.0 1.0 1.0; 1.0 1.0 1.0], [0.0, 0.0]])
+
+julia> x = ones(3)
+3-element Vector{Float64}:
+ 1.0
+ 1.0
+ 1.0
+
+julia> gs = gradient(() -> sum(2 .* m(x)), ps)
+Grads(...)
+
+julia> gs[m.weight]
+2×3 Matrix{Float64}:
+ 2.0  2.0  2.0
+ 2.0  2.0  2.0
+```
+"""
+function params(m...)
+  ps = Params()
+  collect_params!(ps, m)
+  return ps
+end
+
+
 @functor Base.RefValue
+
 
 # Other
 
