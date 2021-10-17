@@ -25,8 +25,8 @@ When a function has many parameters, we can get gradients of each one at the sam
 ```jldoctest basics
 julia> f(x, y) = sum((x .- y).^2);
 
-julia> gradient(f, [2, 1], [2, 0])
-([0, 2], [0, -2])
+julia> gradient(f, [1, 2], [3, 5])
+([-4.0, -6.0], [4.0, 6.0])
 ```
 
 These gradients are based on `x` and `y`. Flux works by instead taking gradients based on the weights and biases that make up the parameters of a model. 
@@ -35,9 +35,9 @@ These gradients are based on `x` and `y`. Flux works by instead taking gradients
 Machine learning often can have *hundreds* of parameters, so Flux lets you work with collections of parameters, via the `params` functions. You can get the gradient of all parameters used in a program without explicitly passing them in.
 
 ```jldoctest basics
-julia> x = [2, 1];
+julia> x = [1, 2];
 
-julia> y = [2, 0];
+julia> y = [3, 5];
 
 julia> gs = gradient(Flux.params(x, y)) do
          f(x, y)
@@ -45,14 +45,14 @@ julia> gs = gradient(Flux.params(x, y)) do
 Grads(...)
 
 julia> gs[x]
-2-element Vector{Int64}:
- 0
- 2
+2-element Vector{Float64}:
+ -4.0
+ -6.0
 
 julia> gs[y]
-2-element Vector{Int64}:
-  0
- -2
+2-element Vector{Float64}:
+ 4.0
+ 6.0
 ```
 
 Here, `gradient` takes a zero-argument function; no arguments are necessary because the `params` tell it what to differentiate.
