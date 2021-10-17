@@ -1,5 +1,11 @@
 # Flux Release Notes
 
+## v0.13
+* After a deprecations cycle, the datasets in `Flux.Data` have
+been removed in favour of MLDatasets.jl.
+* `params` is not exported anymore and is also exported by Distributions.jl 
+* `flatten` are not exported anymore due to clash with Iterators.flatten.
+
 ## v0.12.7
 * Added support for [`GRUv3`](https://github.com/FluxML/Flux.jl/pull/1675)
 * The layers within `Chain` and `Parallel` may now [have names](https://github.com/FluxML/Flux.jl/issues/1680).
